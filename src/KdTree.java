@@ -5,6 +5,8 @@ import edu.princeton.cs.algs4.StdDraw;
 
 import java.awt.Color;
 
+// Only 48.88%
+// For 100% see: https://github.com/tomislavhoman/algs/blob/master/kdtree/KdTree.java
 public class KdTree {
 
     private Node root = null;
