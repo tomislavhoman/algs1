@@ -4,7 +4,6 @@ import edu.princeton.cs.algs4.StdOut;
 
 public final class Inverse {
 
-
     private static final int NUMBER_OF_ELEMENTS = 10;
 
     public static void main(String[] args) {
