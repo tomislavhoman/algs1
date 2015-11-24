@@ -18,6 +18,7 @@ public class DfsUndirected {
         visited = new boolean[graph.V()];
         distTo = new int[graph.V()];
         pathTo = new int[graph.V()];
+
         visitGraph(graph, s);
     }
 
@@ -26,16 +27,18 @@ public class DfsUndirected {
             pathTo[v] = NULL;
             distTo[v] = NULL;
         }
-        dfs(s, graph, 0);
+        distTo[s] = 0;
+        visited[s] = true;
+        dfs(s, graph);
     }
 
-    private void dfs(int v, Graph graph, int distance) {
-        visited[v] = true;
-        distTo[v] = distance;
+    private void dfs(int v, Graph graph) {
         for (int neighbour : graph.adj(v)) {
             if (!visited[neighbour]) {
+                visited[neighbour] = true;
+                distTo[neighbour] = distTo[v] + 1;
                 pathTo[neighbour] = v;
-                dfs(neighbour, graph, distance + 1);
+                dfs(neighbour, graph);
             }
         }
     }
