@@ -136,7 +136,7 @@ public class SchedulingCriticalPath {
 
     public static void main(String[] args) {
 
-        SchedulingCriticalPath scheduler = new SchedulingCriticalPath("graphs/scheduling.txt");
+        SchedulingCriticalPath scheduler = new SchedulingCriticalPath(Inputs.SCHEDULING);
         for (int i = 0; i < scheduler.jobs(); i++) {
             System.out.printf("Job %d scheduled at: %f\n", i, scheduler.scheduledAt(i));
         }
