@@ -8,4 +8,5 @@ public final class Inputs {
     public static final String DIGRAPH_SMALL = "graphs/tinyDG.txt";
     public static final String DAG_SMALL = "graphs/tinyDAG.txt";
     public static final String WEIGHTED_SMALL = "graphs/tinyEWG.txt";
+    public static final String WEIGHTED_DIGRAPH = "graphs/tinyEWD.txt";
 }

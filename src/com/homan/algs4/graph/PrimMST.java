@@ -1,6 +1,5 @@
 package com.homan.algs4.graph;
 
-import com.homan.algs4.unionfind.WeightedQuickUnionUF;
 import edu.princeton.cs.algs4.Edge;
 import edu.princeton.cs.algs4.EdgeWeightedGraph;
 import edu.princeton.cs.algs4.MinPQ;
