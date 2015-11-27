@@ -1,11 +1,8 @@
-import edu.princeton.cs.algs4.AcyclicSP;
-import edu.princeton.cs.algs4.DirectedEdge;
-import edu.princeton.cs.algs4.EdgeWeightedDigraph;
 import edu.princeton.cs.algs4.Picture;
 
-import java.awt.Color;
+import java.awt.*;
 
-// Works on my computer, but doesn't find any paths on grader. Therefor 48.17%
+// 100%
 public class SeamCarver {
 
     private static final double EDGE_ENERGY = 1000.0;
@@ -20,7 +17,7 @@ public class SeamCarver {
 
     // current picture
     public Picture picture() {
-        return picture;
+        return new Picture(picture);
     }
 
     // width of current picture
@@ -59,151 +56,63 @@ public class SeamCarver {
         return Math.sqrt(deltaXSquared + deltaYSquared);
     }
 
-    // sequence of indices for vertical seam
-//    public int[] findVerticalSeam() {
-//        final int width = width();
-//        final int height = height();
-//        final double[][] energyMatrix = new double[width][height];
-//        for (int i = 0; i < width; i++) {
-//            for (int j = 0; j < height; j++) {
-//                energyMatrix[i][j] = energy(i, j);
-//            }
-//        }
-//
-//        final int[] seam = new int[height];
-//        final double[][] distTo = new double[width][height];
-//        for (int x = 0; x < width; x++) {
-//            distTo[x][0] = EDGE_ENERGY;
-//        }
-//
-//        for (int y = 1; y < height; y++) {
-//
-//            double minInRow = Double.MAX_VALUE;
-//            distTo[0][y] = distTo[0][y - 1] + EDGE_ENERGY;
-//            distTo[width - 1][y] = distTo[width - 1][y - 1] + EDGE_ENERGY;
-//
-//            for (int x = 1; x < width - 1; x++) {
-//                final double dist1 = distTo[x - 1][y - 1] + energyMatrix[x][y];
-//                final double dist2 = distTo[x][y - 1] + energyMatrix[x][y];
-//                final double dist3 = distTo[x + 1][y - 1] + energyMatrix[x][y];
-//
-//                double min = dist1;
-//                int minIndex = x - 1;
-//                if (Double.compare(dist2, min) < 0) {
-//                    min = dist2;
-//                    minIndex = x;
-//                }
-//
-//                if (Double.compare(dist3, min) < 0) {
-//                    min = dist3;
-//                    minIndex = x + 1;
-//                }
-//
-//                distTo[x][y] = min;
-//
-//                if (Double.compare(min, minInRow) < 0) {
-//                    minInRow = min;
-//                    seam[y - 1] = minIndex;
-//                }
-//            }
-//        }
-//
-//        seam[seam.length - 1] = seam[seam.length - 2];
-//
-//        return seam;
-//    }
-
-//    public int[] findVerticalSeam() {
-//        final int width = width();
-//        final int height = height();
-//        final double[][] energyMatrix = new double[width][height];
-//        for (int x = 0; x < width; x++) {
-//            for (int y = 0; y < height; y++) {
-//                energyMatrix[x][y] = energy(x, y);
-//            }
-//        }
-//
-//        double dist[][] = new double[width][height];
-//        for (int x = 0; x < width; x++) {
-//            for (int y = 0; y < height; y++) {
-//                if (x == 0) {
-//                    dist[x][y] = energyMatrix[x][y];
-//                } else {
-//                    dist[x][y] = Double.MAX_VALUE;
-//                }
-//            }
-//        }
-//
-//        for (int x = 0; x < width - 1; x++) {
-//            for (int y = 0; y < height; y++) {
-//                for (int delta : deltas) {
-//                    if (y + delta < 0 || y + delta > height - 1) {
-//                        continue;
-//                    }
-//
-//                    final double newDist = dist[x][y] + energyMatrix[x + 1][y + delta];
-//                    if (Double.compare(newDist, dist[x + 1][y + delta]) < 0) {
-//                        dist[x + 1][y + delta] = newDist;
-//                    }
-//                }
-//            }
-//        }
-//
-//        final int[] seam = new int[height];
-//        seam[seam.length - 1] = seam[seam.length - 2];
-//        return seam;
-//    }
-
+    // DAG solution
     public int[] findVerticalSeam() {
-        final int width = width();
-        final int height = height();
 
-        final EdgeWeightedDigraph graph = new EdgeWeightedDigraph(width * height + 2);
-        final int source = width * height;
-        final int sink = width * height + 1;
-        for (int i = 0; i < width; i++) {
-            int v = positionToVertex(i, 0, width);
-            graph.addEdge(new DirectedEdge(source, v, EDGE_ENERGY));
-            v = positionToVertex(i, height - 1, width);
-            graph.addEdge(new DirectedEdge(v, sink, 0));
+        final int height = height();
+        final int width = width();
+        final double[][] energyMatrix = new double[height][width];
+        for (int i = 0; i < height; i++) {
+            for (int j = 0; j < width; j++) {
+                energyMatrix[i][j] = energy(j, i);
+            }
         }
 
-        for (int j = 0; j < height - 1; j++) {
-            for (int i = 0; i < width; i++) {
-                for (int delta : DELTAS) {
-                    int ii = i + delta;
-                    if (ii < 0 || ii > width - 1) {
+        double[][] distTo = new double[height][width];
+        int[][] edgeTo = new int[height][width];
+        for (int i = 0; i < width; i++) {
+            distTo[0][i] = energyMatrix[0][i];
+        }
+
+        for (int i = 1; i < height; i++) {
+            for (int j = 0; j < width; j++) {
+
+                double min = Double.MAX_VALUE;
+                for (int k = 0; k < DELTAS.length; k++) {
+                    int i_ = i - 1;
+                    int j_ = j + DELTAS[k];
+                    if (i_ < 0 || i_ >= height || j_ < 0 || j_ >= width) {
                         continue;
                     }
 
-                    int v = positionToVertex(i, j, width);
-                    int w = positionToVertex(ii, j + 1, width);
-                    final double energy = energy(ii, j + 1);
-                    graph.addEdge(new DirectedEdge(v, w, energy));
+                    double dist = distTo[i_][j_] + energyMatrix[i][j];
+                    if (dist < min) {
+                        min = dist;
+                        distTo[i][j] = min;
+                        edgeTo[i][j] = j_;
+                    }
                 }
             }
         }
 
-        final AcyclicSP sp = new AcyclicSP(graph, source);
-        //final double dist = sp.distTo(sink);
-
-        int[] seem = new int[height];
-        int i = 0;
-        for (DirectedEdge e : sp.pathTo(sink)) {
-            if (i < height) {
-                seem[i++] = vertexToX(e.to(), width);
+        int i = height - 1;
+        int minIndex = 0;
+        double min = distTo[i][minIndex];
+        for (int j = 0; j < width; j++) {
+            if (distTo[i][j] < min) {
+                min = distTo[i][j];
+                minIndex = j;
             }
         }
 
-        return seem;
-    }
+        int[] seam = new int[height];
+        seam[height - 1] = minIndex;
+        for (int j = height - 1; j > 0; j--) {
+            minIndex = edgeTo[j][minIndex];
+            seam[j - 1] = minIndex;
+        }
 
-    private int positionToVertex(int i, int j, int width) {
-        return j * width + i;
-    }
-
-    private int vertexToX(int v, int width) {
-        return v % width;
+        return seam;
     }
 
     // sequence of indices for horizontal seam
@@ -275,7 +184,7 @@ public class SeamCarver {
 
         int lastPosition = seam[0];
         for (int position : seam) {
-            if (position < 0 || position > seamRange) {
+            if (position < 0 || position >= seamRange) {
                 throw new IllegalArgumentException();
             }
 
