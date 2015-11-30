@@ -6,7 +6,7 @@ import edu.princeton.cs.algs4.Queue;
 import edu.princeton.cs.algs4.ST;
 import edu.princeton.cs.algs4.StdOut;
 
-// Got 87%
+// 100%
 public class BaseballElimination {
 
     private int N;
@@ -102,7 +102,8 @@ public class BaseballElimination {
             return true;
         }
 
-        return calculateEliminators(team).size() > 0;
+        Queue<String> eliminators = calculateEliminators(team);
+        return eliminators != null && eliminators.size() > 0;
     }
 
     private boolean isTriviallyEliminated(String team) {
@@ -119,85 +120,124 @@ public class BaseballElimination {
         return false;
     }
 
+    // Calculate vertices indexes
+    private int s(FlowNetwork flowNetwork) {
+        return flowNetwork.V() - 2;
+    }
+
+    private int t(FlowNetwork flowNetwork) {
+        return flowNetwork.V() - 1;
+    }
+
+    private int team(int i, int theTeam, int numberOfGameCombinations) {
+        if (i > theTeam) {
+            i--;
+        }
+        return i + numberOfGameCombinations;
+    }
+
     private FordFulkerson calculateFordFulkerson(int numberOfVertices,
                                                  int x,
-                                                 int source,
-                                                 int target,
-                                                 int numberOfGameCombinations) {
+                                                 int numberOfGames) {
         FlowNetwork flowNetwork = new FlowNetwork(numberOfVertices);
-        int indexOfGame = 1; //0 is source
+        for (int i = 0, game = 0; i < N; i++) {
+            for (int j = i + 1; j < N; j++) {
+                if (i == x || j == x) {
+                    continue;
+                }
+
+                flowNetwork.addEdge(new FlowEdge(s(flowNetwork), game, g[i][j]));
+                flowNetwork.addEdge(new FlowEdge(game, team(i, x, numberOfGames), Double.POSITIVE_INFINITY));
+                flowNetwork.addEdge(new FlowEdge(game, team(j, x, numberOfGames), Double.POSITIVE_INFINITY));
+                game++;
+            }
+        }
+
         for (int i = 0; i < N; i++) {
             if (i == x) {
                 continue;
             }
 
-            for (int j = i; j < N; j++) {
-                if (j == x || i == j) {
-                    continue;
-                }
-
-                int Gij = g[i][j];
-                flowNetwork.addEdge(new FlowEdge(source, indexOfGame, Gij));
-                int Ti = i + numberOfGameCombinations + 1;
-                if (Ti >= x) {
-                    Ti--;
-                }
-                int Tj = j + numberOfGameCombinations + 1;
-                if (Tj >= x) {
-                    Tj--;
-                }
-                flowNetwork.addEdge(new FlowEdge(indexOfGame, Ti, Double.POSITIVE_INFINITY));
-                flowNetwork.addEdge(new FlowEdge(indexOfGame, Tj, Double.POSITIVE_INFINITY));
-                indexOfGame++;
-            }
+            flowNetwork.addEdge(new FlowEdge(team(i, x, numberOfGames), t(flowNetwork), w[x] + r[x] - w[i]));
         }
 
-        int possibleWinsForX = w[x] + r[x];
-        for (int i = 0; i < N - 1; i++) {
-            if (i == x) {
-                continue;
-            }
-
-            int Ti = i + numberOfGameCombinations + 1;
-            if (Ti >= x) {
-                Ti--;
-            }
-            int possibleWinsForI = possibleWinsForX - w[i];
-            if (possibleWinsForI < 0) {
-                possibleWinsForI = 0;
-            }
-            flowNetwork.addEdge(new FlowEdge(Ti, target, possibleWinsForI));
-        }
-
-        return new FordFulkerson(flowNetwork, source, target);
+        return new FordFulkerson(flowNetwork, s(flowNetwork), t(flowNetwork));
     }
+
+    //87% solution
+//    private FordFulkerson calculateFordFulkerson(int numberOfVertices,
+//                                                 int x,
+//                                                 int source,
+//                                                 int target,
+//                                                 int numberOfGameCombinations) {
+//        FlowNetwork flowNetwork = new FlowNetwork(numberOfVertices);
+//        int indexOfGame = 1; //0 is source
+//        for (int i = 0; i < N; i++) {
+//            if (i == x) {
+//                continue;
+//            }
+//
+//            for (int j = i; j < N; j++) {
+//                if (j == x || i == j) {
+//                    continue;
+//                }
+//
+//                int Gij = g[i][j];
+//                flowNetwork.addEdge(new FlowEdge(source, indexOfGame, Gij));
+//                int Ti = i + numberOfGameCombinations + 1;
+//                if (Ti >= x) {
+//                    Ti--;
+//                }
+//                int Tj = j + numberOfGameCombinations + 1;
+//                if (Tj >= x) {
+//                    Tj--;
+//                }
+//                flowNetwork.addEdge(new FlowEdge(indexOfGame, Ti, Double.POSITIVE_INFINITY));
+//                flowNetwork.addEdge(new FlowEdge(indexOfGame, Tj, Double.POSITIVE_INFINITY));
+//                indexOfGame++;
+//            }
+//        }
+//
+//        int possibleWinsForX = w[x] + r[x];
+//        for (int i = 0; i < N - 1; i++) {
+//            if (i == x) {
+//                continue;
+//            }
+//
+//            int Ti = i + numberOfGameCombinations + 1;
+//            if (Ti >= x) {
+//                Ti--;
+//            }
+//            int possibleWinsForI = possibleWinsForX - w[i];
+//            if (possibleWinsForI < 0) {
+//                possibleWinsForI = 0;
+//            }
+//            flowNetwork.addEdge(new FlowEdge(Ti, target, possibleWinsForI));
+//        }
+//
+//        return new FordFulkerson(flowNetwork, source, target);
+//    }
 
     private Queue<String> calculateEliminators(String team) {
         //All the combination of games + teams that are not "team" + source and sink
         int numberOfGameCombinations = (N - 1) * (N - 2) / 2;
         int numberOfVertices = numberOfGameCombinations + N - 1 + 2;
-        int source = 0;
-        int target = numberOfVertices - 1;
         int x = namesToIndex.get(team);
 
-        FordFulkerson fordFulkerson = calculateFordFulkerson(numberOfVertices, x, source, target, numberOfGameCombinations);
+        FordFulkerson fordFulkerson = calculateFordFulkerson(numberOfVertices, x, numberOfGameCombinations);
 
         Queue<String> eliminatedBy = new Queue<>();
-        for (int i = 0; i < N - 1; i++) {
+        for (int i = 0; i < N; i++) {
             if (i == x) {
                 continue;
             }
 
-            int Ti = i + numberOfGameCombinations + 1;
-            if (Ti >= x) {
-                Ti--;
-            }
-            if (fordFulkerson.inCut(Ti)) {
+            if (fordFulkerson.inCut(team(i, x, numberOfGameCombinations))) {
                 eliminatedBy.enqueue(indexToNames[i]);
             }
         }
 
-        return eliminatedBy;
+        return eliminatedBy.size() > 0 ? eliminatedBy : null;
     }
 
     // subset R of teams that eliminates given team; null if not eliminated
