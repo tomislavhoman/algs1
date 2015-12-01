@@ -123,7 +123,7 @@ public class BstTraversal {
             if (node.treeNode.right != null) stack.push(new StackNode(node.treeNode.right));
             node.goingUp = true;
             stack.push(node);
-            if (node.treeNode.left != null) stack.push(new StackNode(node.treeNode.left, true));
+            if (node.treeNode.left != null) stack.push(new StackNode(node.treeNode.left));
         }
 
         System.out.println();
@@ -148,7 +148,7 @@ public class BstTraversal {
             stack.push(node);
 
             if (node.treeNode.right != null) stack.push(new StackNode(node.treeNode.right));
-            if (node.treeNode.left != null) stack.push(new StackNode(node.treeNode.left, true));
+            if (node.treeNode.left != null) stack.push(new StackNode(node.treeNode.left));
         }
 
         System.out.println();
@@ -204,16 +204,10 @@ public class BstTraversal {
 
     private static final class StackNode {
         private TreeNode treeNode;
-        private boolean isLeft = false;
         private boolean goingUp = false;
 
         private StackNode(TreeNode treeNode) {
             this.treeNode = treeNode;
-        }
-
-        private StackNode(TreeNode treeNode, boolean isLeft) {
-            this.treeNode = treeNode;
-            this.isLeft = isLeft;
         }
     }
 }
