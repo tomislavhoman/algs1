@@ -35,12 +35,7 @@ public class BoggleSolver {
         for (int i = 0; i < board.rows(); i++) {
             for (int j = 0; j < board.cols(); j++) {
                 visited = new boolean[board.rows()][board.cols()];
-                char c = board.getLetter(i, j);
-                String word = String.valueOf(c);
-                if (c == 'Q') {
-                    word = word.concat("U");
-                }
-                dfsNonR(i, j, word, words, board);
+                dfsNonR(i, j, board.getLetter(i, j), words, board);
             }
         }
 
@@ -79,6 +74,7 @@ public class BoggleSolver {
         return node;
     }
 
+    // Recursive version
 //    private int getFromTrie(String word) {
 //        TrieNode node = getFromTrie(trieRoot, word, 0);
 //        if (node == null || !node.isAWord) {
@@ -110,6 +106,7 @@ public class BoggleSolver {
         return -1;
     }
 
+    // Recursive version
 //    private TrieNode getFromTrie(TrieNode node, String word, int depth) {
 //        if (node == null || depth > word.length()) {
 //            return null;
@@ -128,6 +125,7 @@ public class BoggleSolver {
 //
 //    }
 
+    //Recursive version
 //    private boolean trieContains(String word) {
 //        TrieNode node = getFromTrie(trieRoot, word, 0);
 //        return node != null && node.isAWord;
@@ -156,10 +154,12 @@ public class BoggleSolver {
         return false;
     }
 
+    //Recursive version
 //    private boolean trieContainsPrefix(String prefix) {
 //        return trieContainsPrefix(trieRoot, prefix, 0) != null;
 //    }
 
+    //Recursive version
 //    private TrieNode trieContainsPrefix(TrieNode node, String prefix, int depth) {
 //        if (node == null || depth > prefix.length()) {
 //            return null;
@@ -190,21 +190,26 @@ public class BoggleSolver {
         }
     }
 
-    private void dfsNonR(int i1, int j1, String word1, SET<String> words, BoggleBoard board) {
+    private void dfsNonR(int i1, int j1, char cInitial, SET<String> words, BoggleBoard board) {
 
         // Using non-recursive version for performance
         Stack<StackNode> stack = new Stack<>();
-        stack.push(new StackNode(i1, j1, word1));
+
+        StringBuilder currentWord = new StringBuilder(board.cols() * board.rows());
+        TrieNode currentTrieNode = trieRoot;
+        TrieNode previousTrieNode = null;
+        stack.push(new StackNode(i1, j1, cInitial, cInitial == 'Q'));
 
         while (!stack.isEmpty()) {
 
             StackNode node = stack.pop();
             int i = node.i;
             int j = node.j;
-            String word = node.word;
 
             if (node.goingUp) {
                 visited[i][j] = false;
+                dropLast(currentWord, node.hasU);
+                currentTrieNode = previousTrieNode;
                 continue;
             }
 
@@ -215,9 +220,15 @@ public class BoggleSolver {
             node.goingUp = true;
             stack.push(node);
 
+            currentWord.append(node.c);
+            if (node.hasU) {
+                currentWord.append('U');
+            }
+            
+
             visited[i][j] = true;
-            if (trieContains(word) && word.length() > 2) {
-                words.add(word);
+            if (trieContains(currentWord.toString()) && currentWord.length() > 2) {
+                words.add(currentWord.toString());
             }
 
             for (int[] delta : DELTAS) {
@@ -229,16 +240,26 @@ public class BoggleSolver {
 
                 if (!visited[i_][j_]) {
                     char c = board.getLetter(i_, j_);
-                    String suffix = String.valueOf(c);
+                    currentWord.append(c);
+                    boolean hasU = false;
                     if (c == 'Q') {
-                        suffix = suffix.concat("U");
+                        currentWord.append('U');
+                        hasU = true;
                     }
-                    String newWord = word.concat(suffix);
-                    if (trieContainsPrefix(newWord)) {
-                        stack.push(new StackNode(i_, j_, newWord));
+
+                    if (trieContainsPrefix(currentWord.toString())) {
+                        stack.push(new StackNode(i_, j_, c, hasU));
                     }
+                    dropLast(currentWord, hasU);
                 }
             }
+        }
+    }
+
+    private void dropLast(StringBuilder builder, boolean dropTwo) {
+        builder.deleteCharAt(builder.length() - 1);
+        if (dropTwo) {
+            builder.deleteCharAt(builder.length() - 1);
         }
     }
 
@@ -290,13 +311,15 @@ public class BoggleSolver {
     private static class StackNode {
         private int i;
         private int j;
-        private String word;
         private boolean goingUp = false;
+        private char c;
+        private boolean hasU = false;
 
-        public StackNode(int i, int j, String word) {
+        public StackNode(int i, int j, char c, boolean hasU) {
             this.i = i;
             this.j = j;
-            this.word = word;
+            this.c = c;
+            this.hasU = hasU;
         }
     }
 
