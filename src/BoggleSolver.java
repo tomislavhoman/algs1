@@ -3,6 +3,8 @@ import edu.princeton.cs.algs4.SET;
 import edu.princeton.cs.algs4.Stack;
 import edu.princeton.cs.algs4.StdOut;
 
+
+// 100% - Ugly iterative code because od performances
 public class BoggleSolver {
 
     private static final int[][] DELTAS = new int[][]{
@@ -196,9 +198,9 @@ public class BoggleSolver {
         Stack<StackNode> stack = new Stack<>();
 
         StringBuilder currentWord = new StringBuilder(board.cols() * board.rows());
-        TrieNode currentTrieNode = trieRoot;
-        TrieNode previousTrieNode = null;
-        stack.push(new StackNode(i1, j1, cInitial, cInitial == 'Q'));
+        Stack<TrieNode> trieNodes = new Stack<>();
+        trieNodes.push(trieRoot);
+        stack.push(new StackNode(i1, j1, cInitial, cInitial == 'Q', 1 + (cInitial == 'Q' ? 1 : 0)));
 
         while (!stack.isEmpty()) {
 
@@ -209,7 +211,10 @@ public class BoggleSolver {
             if (node.goingUp) {
                 visited[i][j] = false;
                 dropLast(currentWord, node.hasU);
-                currentTrieNode = previousTrieNode;
+                trieNodes.pop();
+                if (node.hasU) {
+                    trieNodes.pop();
+                }
                 continue;
             }
 
@@ -224,10 +229,24 @@ public class BoggleSolver {
             if (node.hasU) {
                 currentWord.append('U');
             }
-            
+            TrieNode previousTrieNode = trieNodes.peek();
+            TrieNode currentTrieNode = previousTrieNode.children[node.c - 'A'];
+            if (currentTrieNode == null) {
+                continue;
+            }
+            trieNodes.push(currentTrieNode);
+
+            if (node.hasU) {
+                currentTrieNode = currentTrieNode.children['U' - 'A'];
+                if (currentTrieNode == null) {
+                    continue;
+                }
+                trieNodes.push(currentTrieNode);
+            }
 
             visited[i][j] = true;
-            if (trieContains(currentWord.toString()) && currentWord.length() > 2) {
+            int currentWordLength = currentWord.length();
+            if (currentTrieNode.isAWord && currentWordLength == node.index && currentWordLength > 2) {
                 words.add(currentWord.toString());
             }
 
@@ -247,9 +266,21 @@ public class BoggleSolver {
                         hasU = true;
                     }
 
-                    if (trieContainsPrefix(currentWord.toString())) {
-                        stack.push(new StackNode(i_, j_, c, hasU));
+                    int newIndex = node.index + 1;
+                    if (hasU) {
+                        newIndex++;
                     }
+
+                    TrieNode childNode = currentTrieNode.children[c - 'A'];
+                    if (childNode != null) {
+                        if (hasU) {
+                            childNode = childNode.children['U' - 'A'];
+                        }
+                        if (childNode != null) {
+                            stack.push(new StackNode(i_, j_, c, hasU, newIndex));
+                        }
+                    }
+
                     dropLast(currentWord, hasU);
                 }
             }
@@ -314,12 +345,14 @@ public class BoggleSolver {
         private boolean goingUp = false;
         private char c;
         private boolean hasU = false;
+        private int index;
 
-        public StackNode(int i, int j, char c, boolean hasU) {
+        public StackNode(int i, int j, char c, boolean hasU, int index) {
             this.i = i;
             this.j = j;
             this.c = c;
             this.hasU = hasU;
+            this.index = index;
         }
     }
 
