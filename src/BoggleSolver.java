@@ -4,7 +4,7 @@ import edu.princeton.cs.algs4.Stack;
 import edu.princeton.cs.algs4.StdOut;
 
 
-// 100% - Ugly iterative code because od performances
+// 100% - Ugly iterative code to get performance
 public class BoggleSolver {
 
     private static final int[][] DELTAS = new int[][]{
