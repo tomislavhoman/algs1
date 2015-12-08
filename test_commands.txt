@@ -1,0 +1,3 @@
+javac -cp ./:../libs/algs4.jar MoveToFront.java 
+java -cp ./:../libs/algs4.jar MoveToFront - < abra.txt | java -cp ./:../libs/algs4.jar HexDump 16
+java -cp ./:../libs/algs4.jar MoveToFront - < abra.txt | java -cp ./:../libs/algs4.jar MoveToFront +
